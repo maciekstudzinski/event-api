@@ -14,7 +14,8 @@ class EventController extends Controller
      */
     public function index()
     {
-        return EventResource::collection(Event::all());
+        // enabling showing owner user info on events route
+        return EventResource::collection(Event::with('user')->get());
     }
 
     /**
@@ -42,6 +43,8 @@ class EventController extends Controller
      */
     public function show(Event $event)
     {
+        // passing user info 
+        $event->load('user', 'attendees');
         return new EventResource($event);
     }
 
