@@ -4,19 +4,30 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
+    use CanLoadRelationships;
+
     /**
      * Display a listing of the resource. Using EventResource to return data wrapped in an extra property
      */
     public function index()
     {
+
+        $relations = ['user', 'attendees', 'attendees.user'];
+        $query = $this->loadRelationships(Event::query(), $relations);
+    
+
         // enabling showing owner user info on events route
-        return EventResource::collection(Event::with('user')->get());
+        return EventResource::collection(
+            $query->latest()->paginate()
+        );
     }
+
 
     /**
      * Store a newly created resource in storage.
