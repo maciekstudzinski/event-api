@@ -5,6 +5,7 @@ namespace App\Http\Traits;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 trait CanLoadRelationships {
     /**
@@ -12,7 +13,7 @@ trait CanLoadRelationships {
      *      
      * @return boolean
      */
-    public function loadRelationships(Model|QueryBuilder|EloquentBuilder $for, ?array $relations = null): Model|QueryBuilder|EloquentBuilder {
+    public function loadRelationships(Model|QueryBuilder|EloquentBuilder|HasMany $for, ?array $relations = null): Model|QueryBuilder|EloquentBuilder|HasMany {
         // if not passed to function relations will be populated by object's parameter or become an empty array
         $relations = $relations ?? $this->relations ?? [];
 

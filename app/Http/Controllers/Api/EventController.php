@@ -6,11 +6,19 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\EventResource;
 use App\Http\Traits\CanLoadRelationships;
 use App\Models\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 
 class EventController extends Controller
 {
     use CanLoadRelationships;
+
+    private array $relations = ['user', 'attendees', 'attendees.user'];
+
+    public function __construct() {
+        $this->middleware('auth:sanctum')->except(['index', 'show']);
+        $this->authorizeResource(Event::class, 'event');
+    }
 
     /**
      * Display a listing of the resource. Using EventResource to return data wrapped in an extra property
@@ -18,8 +26,8 @@ class EventController extends Controller
     public function index()
     {
 
-        $relations = ['user', 'attendees', 'attendees.user'];
-        $query = $this->loadRelationships(Event::query(), $relations);
+        
+        $query = $this->loadRelationships(Event::query());
     
 
         // enabling showing owner user info on events route
@@ -43,10 +51,10 @@ class EventController extends Controller
         ]);
         $event = Event::create([
             ...$data,
-            'user_id' => 1,
+            'user_id' => $request->user()->id,
         ]);
 
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -56,7 +64,7 @@ class EventController extends Controller
     {
         // passing user info 
         $event->load('user', 'attendees');
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**
@@ -64,6 +72,12 @@ class EventController extends Controller
      */
     public function update(Request $request, Event $event)
     {
+        // if(Gate::denies('update-event', $event)) {
+        //     abort(403, 'You are not authorised to update this event');
+        // }
+
+        // $this->authorize('update-event', $event);
+
         $event->update($request->validate([
                 'name' => 'sometimes|string|max:255',
                 'description' => 'nullable|string',
@@ -72,7 +86,7 @@ class EventController extends Controller
     
         ]));
 
-        return new EventResource($event);
+        return new EventResource($this->loadRelationships($event));
     }
 
     /**

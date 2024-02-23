@@ -4,18 +4,28 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AtendeeResource;
+use App\Http\Traits\CanLoadRelationships;
 use App\Models\Atendee;
 use App\Models\Event;
 use Illuminate\Http\Request;
 
 class AtendeeController extends Controller
 {
+    use CanLoadRelationships;
+
+    private array $relations = ['user'];
+
+    public function __construct() {
+        $this->middleware('auth:sanctum')->except(['index', 'show', 'update']);
+        $this->authorizeResource(Atendee::class, 'attendee');
+    }
+
     /**
      * Display a listing of the resource.
      */
     public function index(Event $event)
     {
-        $attendees = $event->attendees()->latest();
+        $attendees = $this->loadRelationships($event->attendees()->latest());
 
         return AtendeeResource::collection(
             $attendees->paginate()
@@ -27,9 +37,9 @@ class AtendeeController extends Controller
      */
     public function store(Request $request, Event $event)
     {
-        $attendee = $event->attendees()->create([
+        $attendee = $this->loadRelationships($event->attendees()->create([
             'user_id' => 1,
-        ]);
+        ]));
 
         return new AtendeeResource($attendee);
     }
@@ -40,7 +50,7 @@ class AtendeeController extends Controller
     public function show(Event $event, Atendee $attendee)
     {
 
-        return new AtendeeResource($attendee);
+        return new AtendeeResource($this->loadRelationships($attendee));
     }
 
     /**
@@ -54,8 +64,10 @@ class AtendeeController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $event, Atendee $attendee)
+    public function destroy(Event $event, Atendee $attendee)
     {
+        // $this->authorize('delete-attendee', [$event, $attendee]);
+
         $attendee->delete();
 
         return response(status: 204);
