@@ -24,4 +24,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 Route::apiResource('events', EventController::class);
 // attendees don't function on standalone basis, scoped route required to only get attendees of current event
-Route::apiResource('events.atendees', AtendeeController::class)->scoped(['atendee' => 'event']);
+Route::apiResource('events.attendees', AtendeeController::class)->scoped()->except(['update']);
